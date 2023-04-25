@@ -15,10 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class OptimisticLockStockFacadeTest {
+class NamedLockStockFacadeTest {
 
     @Autowired
-    private OptimisticLockStockFacade optimisticLockStockFacade;
+    private NamedLockStockFacade namedLockStockFacade;
 
     @Autowired
     private StockRepository stockRepository;
@@ -43,9 +43,7 @@ class OptimisticLockStockFacadeTest {
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
-                    optimisticLockStockFacade.decrease(1L, 1L);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    namedLockStockFacade.decrease(1L, 1L);
                 } finally {
                     latch.countDown();
                 }
@@ -61,6 +59,8 @@ class OptimisticLockStockFacadeTest {
         첫번째 해결 - synchronized : auto commit 상태에서(@Transaction 주석처리) 경쟁상태 메서드에 synchronized 키워드 추가
         두번째 해결 - pessimistic lock : DB에 읽기 접근할 때 비관적락 전략을 사용. data jpa에서는 @Lock(value = LockModeType.PESSIMISTIC_WRITE) 처럼 사용.
         세번째 해결 - optimistic lock : DB에 업데이트를 시도할 때 version을 체크, 업데이트 실패 시 재시도하는 로직까지 작성.
+        네번째 해결 - named lock : DB에서 id를 키로 하는 락객체를 얻어서 사용. 트랜잭션이 실패하더라도 락은 반환되지 않으므로 주의해서 명시적으로 반환해줄것. 또한 같은 데이터소스를 사용하면 커넥션풀을 쉽게 고갈시킬 수 있음. 또한 Transaction session을 분리해야 하는 점을 잘 이해해야 한다.
+                                pessimistic lock과 비슷하지만, named lock은 분산락 구현이 용이하다. 그러나 사용상의 복잡도가 높기 때문에 잘 고려해야 한다.
          */
     }
 }
