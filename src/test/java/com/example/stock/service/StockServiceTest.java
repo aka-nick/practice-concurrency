@@ -66,6 +66,6 @@ class StockServiceTest {
 
         Stock stock = stockRepository.findById(1L).orElseThrow();
 
-//        assertThat(stock.getQuantity()).isEqualTo(0L); // 실패 : 레이스컨디션 발생
+        assertThat(stock.getQuantity()).isEqualTo(0L);
     }
 }
